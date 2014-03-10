@@ -19,14 +19,42 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			 <groupId>log4j</groupId>
-			  <artifactId>log4j</artifactId>
-			  <version>1.2.16</version>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>1.2.16</version>
 		</dependency>
-		<!-- dependency> <groupId>org.modelmapper</groupId> <artifactId>modelmapper</artifactId> 
-			<version>0.6.3</version> </dependency -->
-		<!-- dependency> <groupId>net.sf.dozer</groupId> <artifactId>dozer</artifactId> 
-			<version>5.4.0</version> </dependency> <dependency> <groupId>org.slf4j</groupId> 
-			<artifactId>slf4j-log4j12</artifactId> <version>1.7.6</version> </dependency -->
+		<dependency>
+			<groupId>commons-beanutils</groupId>
+			<artifactId>commons-beanutils</artifactId>
+			<version>1.8.3</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+			<version>2.3</version>
+		</dependency>
+
 	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.5.1</version>
+				<configuration>
+					<source>1.7</source>
+					<target>1.7</target>
+				</configuration>
+			</plugin>
+
+		</plugins>
+	</build>
+	<reporting>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-pmd-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</reporting>
 </project>

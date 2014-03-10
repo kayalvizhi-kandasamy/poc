@@ -53,7 +53,6 @@ public class PersistenceManager {
 			while (nodes.hasNext()) {
 				Node node = nodes.next();
 				T entity = converter.unmarshall(node, requiredType);
-				converter.copyProperties(node, entity);
 				System.out.println("Retrieved:" + entity);
 				entityList.add(entity);
 			}

@@ -3,9 +3,11 @@ package com.poc.neo4j.dao.util;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.log4j.Logger;
 
 import static com.poc.neo4j.dao.Constants.*;
+
 import com.poc.neo4j.dao.exception.ConverterException;
 
 public class ReflectionUtil {
@@ -73,6 +75,36 @@ public class ReflectionUtil {
 		}
 		return value;
 		
+	}
+	
+	public static Object getProperty(Object entity, String fieldName)
+	{
+		Object sourceValue = null;
+		try {
+			sourceValue = PropertyUtils.getProperty(entity, fieldName);
+		} catch (IllegalAccessException | InvocationTargetException
+				| NoSuchMethodException e) {
+			ConverterException ce = new ConverterException(ERROR_ACCESSING_METHOD,
+					"Get Method for property:[" + fieldName + 
+					"] is not found/accessible in Class[" + entity.getClass().getName() + "]", e);
+			LOGGER.error(ce);
+			System.err.println(ce);
+		}
+		return sourceValue;
+	}
+	
+	public static void setProperty(Object entity, String fieldName, Object value)
+	{
+		try {
+			PropertyUtils.setProperty(entity, fieldName, value);
+		} catch (IllegalAccessException | InvocationTargetException
+				| NoSuchMethodException e) {
+			ConverterException ce = new ConverterException(ERROR_ACCESSING_METHOD,
+					"Get Method for property:[" + fieldName + 
+					"] is not found/accessible in Class[" + entity.getClass().getName() + "]", e);
+			LOGGER.error(ce);
+			System.err.println(ce);
+		}
 	}
 	
 	@SuppressWarnings("unchecked")

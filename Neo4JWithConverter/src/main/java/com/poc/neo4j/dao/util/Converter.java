@@ -1,5 +1,7 @@
 package com.poc.neo4j.dao.util;
 
+import static com.poc.neo4j.dao.Constants.AT_CLASS;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -8,13 +10,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 
 import com.poc.neo4j.dao.exception.ConverterException;
 import com.poc.neo4j.model.BaseEntity;
-import static com.poc.neo4j.dao.Constants.*;
 public class Converter {
 
 	
@@ -25,17 +27,17 @@ public class Converter {
 		if (destination == null || source == null) {
   	      return null;
   	    }
-    	Field[] sourceFields = source.getClass().getDeclaredFields();
-    	Method setPropertyMethod = ReflectionUtil.getMethod(destination.getClass(), "setProperty", String.class, Object.class);
+    	
+    	Method setPropertyMethod = ReflectionUtil.getMethod(destination.getClass(), 
+    			"setProperty", String.class, Object.class);
+    	Field[] sourceFields = (Field[]) ArrayUtils.addAll(source.getClass().getSuperclass().getDeclaredFields(), 
+    										source.getClass().getDeclaredFields());
     	for (int i = 0; i < sourceFields.length; i++) {
-    		
     		String fieldName = sourceFields[i].getName();
-    		String sourceGetterMethodName = "get" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
-    		Method sourceGetterMethod = ReflectionUtil.getMethod(source.getClass(), sourceGetterMethodName, null);
-    		if (sourceGetterMethod == null) {
-				continue;
-			}
-    		Object sourceValue = ReflectionUtil.invoke(sourceGetterMethod,source, null);
+    		if ("serialVersionUID".equals(fieldName)){//TODO some generic way for ignoring marked fields
+    			continue;
+    		}
+    		Object sourceValue = ReflectionUtil.getProperty(source, fieldName);
 			if (sourceValue == null) {
 				continue;
 			}
@@ -63,24 +65,16 @@ public class Converter {
 		T destinationObject = ReflectionUtil.newInstance(destinationClass);
 		Iterable<String> keys = sourceNode.getPropertyKeys();
 		for (String key : keys) {
-	    	String setterMethodName = "set" + key.substring(0, 1).toUpperCase() + key.substring(1);
-	    	Object value = sourceNode.getProperty(key);
-	    	Method setterMethod;
-			try 
-			{
-				setterMethod = ReflectionUtil.getMethod(destinationObject.getClass(), setterMethodName, value.getClass());
-				ReflectionUtil.invoke(setterMethod, destinationObject, value);
-			} catch (ConverterException e) {
-				continue;
-			}
+			ReflectionUtil.setProperty(destinationObject, key, sourceNode.getProperty(key));
         }
-		ReflectionUtil.invoke( ReflectionUtil.getMethod(destinationObject.getClass(), "setId", Long.class), 
-				destinationObject, sourceNode.getId());
+		ReflectionUtil.setProperty(destinationObject, "id", sourceNode.getId());
+        copyProperties(sourceNode, destinationObject);
         return destinationObject;
 	}
 	
+
 	@SuppressWarnings("unchecked")
-	public <T extends BaseEntity> void copyProperties(Node node, T entity) 
+	public <T> void copyProperties(Node node, T entity) 
 	throws ConverterException {
 		
 		Iterable<Relationship> relations = node.getRelationships(Direction.OUTGOING);
@@ -109,18 +103,14 @@ public class Converter {
 			T child = (T) unmarshall(endNode, associatedClass);
 			if (setterParamType[0].isAssignableFrom(List.class))
 			{//TODO for all collection types
-				String getterMethodName = "get" + relationType.substring(0, 1).toUpperCase() + relationType.substring(1);
-				Method getterMethod = ReflectionUtil.getMethod(entity.getClass(), getterMethodName, null);
-				if (getterMethod != null) {
-					List<T> list = (List<T>) ReflectionUtil.invoke(getterMethod, entity, null);
-					if (list == null) {
-						list = new ArrayList<T>();
-					}
-					list.add(child);
-					ReflectionUtil.invoke(setterMethod, entity, list);
+				List<T> list = (List<T>) ReflectionUtil.getProperty(entity, relationType);
+				if (list == null) {
+					list = new ArrayList<T>();
 				}
+				list.add(child);
+				ReflectionUtil.setProperty(entity, relationType, list);
 			} else {
-				ReflectionUtil.invoke(setterMethod, entity, child);
+				ReflectionUtil.setProperty(entity, relationType, child);
 			}
 			if (endNode.hasRelationship(Direction.OUTGOING)) {
 				copyProperties(endNode, child);
