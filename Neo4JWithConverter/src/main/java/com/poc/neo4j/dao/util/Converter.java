@@ -15,6 +15,7 @@ import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 
+import com.poc.neo4j.dao.annotation.IgnoreField;
 import com.poc.neo4j.dao.exception.ConverterException;
 import com.poc.neo4j.model.BaseEntity;
 public class Converter {
@@ -34,7 +35,9 @@ public class Converter {
     										source.getClass().getDeclaredFields());
     	for (int i = 0; i < sourceFields.length; i++) {
     		String fieldName = sourceFields[i].getName();
-    		if ("serialVersionUID".equals(fieldName)){//TODO some generic way for ignoring marked fields
+    		IgnoreField ignoreField =  sourceFields[i].getAnnotation(IgnoreField.class);
+    		if (ignoreField != null){
+    			System.out.println("Ignored field: " + fieldName);
     			continue;
     		}
     		Object sourceValue = ReflectionUtil.getProperty(source, fieldName);

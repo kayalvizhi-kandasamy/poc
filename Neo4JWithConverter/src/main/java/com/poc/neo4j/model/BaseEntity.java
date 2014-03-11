@@ -10,6 +10,8 @@ package com.poc.neo4j.model;
 import java.io.Serializable;
 import java.util.Date;
 
+import com.poc.neo4j.dao.annotation.IgnoreField;
+
 
 /**
  * @author ramya
@@ -17,6 +19,7 @@ import java.util.Date;
  */
 public class BaseEntity implements Serializable {
 
+	@IgnoreField
 	private static final long serialVersionUID = -4493624160301068593L;
 
 	private Long id;
