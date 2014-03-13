@@ -1,16 +1,23 @@
 package com.poc.neo4j.dao;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import static org.junit.Assert.*;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.junit.After;
 import org.junit.Test;
 
 import com.poc.neo4j.model.AnsibleModuleDefinition;
+import com.poc.neo4j.model.Filter;
+import com.poc.neo4j.model.IpPermissionInfo;
 import com.poc.neo4j.model.Module;
 import com.poc.neo4j.model.ScriptFile;
+import com.poc.neo4j.model.Task;
 
 public class TestPersistenceManager {
 
@@ -20,7 +27,7 @@ public class TestPersistenceManager {
 	public void testPersistEntity_simpleObject(){
 		
 		System.out.println("\nTestPersistenceManager.testPersistEntity_simpleObject()");
-		System.out.println("--------------------------------------------------------");
+		System.out.println("---------------------------------------------------------");
 		ScriptFile roleSF = new ScriptFile();
 		roleSF.setName("roleSFName1");
 		roleSF.setPath("roleSFPath1");
@@ -40,7 +47,7 @@ public class TestPersistenceManager {
 	public void testPersistEntity_complexObject(){
 		
 		System.out.println("\nTestPersistenceManager.testPersistEntity_complexObject()");
-		System.out.println("--------------------------------------------------------");
+		System.out.println("----------------------------------------------------------");
 		ScriptFile roleSF = new ScriptFile();
 		roleSF.setName("roleSFName1");
 		roleSF.setPath("roleSFPath1");
@@ -79,6 +86,91 @@ public class TestPersistenceManager {
 		assertEquals(1, retrievedDefinition.getRoles().size());
 		
 	}
+	
+	@Test
+	public void testPersistEntity_EntityWithMap(){
+		
+		System.out.println("\nTestPersistenceManager.testPersistEntity_EntityWithMap()");
+		System.out.println("----------------------------------------------------------");
+		Task task = new Task();
+		task.setName("NewTask");
+		Map<String, String> taskEntriesMap = new HashMap<String, String>();
+		taskEntriesMap.put("Key1", "Value1");
+		taskEntriesMap.put("Key1", "Value1");
+		task.setTaskEntries(taskEntriesMap);
+		persistenceManager.persistEntity(task);
+		
+		List<Task> tasks = persistenceManager.getEntities(Task.class);
+		assertNotNull(tasks);
+		assertEquals(1, tasks.size());
+		Task retrievedTask = tasks.get(0);
+		assertNotNull(retrievedTask.getId());
+		assertEquals(task.getName(), retrievedTask.getName());
+		assertEquals(task.getTaskEntries(), retrievedTask.getTaskEntries());
+	}
+	
+	@Test
+	public void testPersistEntity_EntityWithListOfSimpleType(){
+		
+		System.out.println("\nTestPersistenceManager.testPersistEntity_EntityWithListOfSimpleType()");
+		System.out.println("-----------------------------------------------------------------------");
+		Filter filter = new Filter();
+		List<String> values = new ArrayList<String>();
+		values.add("Value1");
+		values.add("Value2");
+		filter.setValues(values);
+		persistenceManager.persistEntity(filter);
+		
+		List<Filter> filters = persistenceManager.getEntities(Filter.class);
+		assertNotNull(filters);
+		assertEquals(1, filters.size());
+		Filter retrievedFilter = filters.get(0);
+		assertNotNull(retrievedFilter.getId());
+//		assertEquals(filter.getValues(), retrievedFilter.getValues());//TODO list ordering
+		assertEquals(filter.getValues().size(), retrievedFilter.getValues().size());
+		for (String value : values) {
+			assertTrue(retrievedFilter.getValues().contains(value));
+		}
+	}
+	
+	@Test
+	public void testPersistEntity_EntityWithSetOfSimpleType(){
+		
+		System.out.println("\nTestPersistenceManager.testPersistEntity_EntityWithSetOfSimpleType()");
+		System.out.println("-----------------------------------------------------------------------");
+		IpPermissionInfo ipPermInfo = new IpPermissionInfo();
+		
+		List<String> ipRanges = new ArrayList<String>();
+		ipRanges.add("ipRange1");
+		ipRanges.add("ipRange2");
+		ipPermInfo.setIpRanges(ipRanges);
+		
+		Set<String> groups = new HashSet<String>();
+		groups.add("groupId1");
+		groups.add("groupId2");
+		ipPermInfo.setGroupIds(groups);
+		
+		persistenceManager.persistEntity(ipPermInfo);
+		
+		List<IpPermissionInfo> ipPermissionInfos = persistenceManager.getEntities(IpPermissionInfo.class);
+		assertNotNull(ipPermissionInfos);
+		assertEquals(1, ipPermissionInfos.size());
+		IpPermissionInfo retrievedIpPermissionInfo = ipPermissionInfos.get(0);
+		assertNotNull(retrievedIpPermissionInfo.getId());
+		assertEquals(ipPermInfo.getIpRanges().size(), 
+				retrievedIpPermissionInfo.getIpRanges().size());
+		assertEquals(ipPermInfo.getGroupIds().size(), 
+				retrievedIpPermissionInfo.getGroupIds().size());
+		
+		for (String ipRange : ipRanges) {
+			assertTrue(retrievedIpPermissionInfo.getIpRanges().contains(ipRange));
+		}
+		
+		for (String group : groups) {
+			assertTrue(retrievedIpPermissionInfo.getGroupIds().contains(group));
+		}
+	}
+	
 	
 	@Test
 	public void testGetEntities(){
@@ -148,6 +240,7 @@ public class TestPersistenceManager {
 		assertEquals(module.getPath(), modules.get(0).getPath());
 		assertEquals(module.getVersion(), modules.get(0).getVersion());
 	}
+	
 	
 	@After
 	public void clearDb() {

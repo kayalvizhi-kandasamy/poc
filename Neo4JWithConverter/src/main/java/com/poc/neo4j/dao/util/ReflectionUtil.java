@@ -1,5 +1,6 @@
 package com.poc.neo4j.dao.util;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -23,6 +24,22 @@ public class ReflectionUtil {
 			return true;
 		}
 		return false;	
+	}
+	
+	public static Class<?> getType(Class<?> classObject, String fieldName) {
+		
+		Class<?> type = null;
+		try {
+			Field field = classObject.getDeclaredField(fieldName);
+			if (field != null) {
+				type = field.getType();
+			}
+		} catch (NoSuchFieldException | SecurityException e) {
+			ConverterException ce = new ConverterException(FIELD_NOT_FOUND,"Field:[" + fieldName + 
+					"] not found in Class[" + classObject.getName() + "]", e);
+			LOGGER.error(ce);
+		}
+		return type;
 	}
 	
 	public static  Method getMethod(Class<?> destinationClass, String name, Class<?>... parameterTypes)

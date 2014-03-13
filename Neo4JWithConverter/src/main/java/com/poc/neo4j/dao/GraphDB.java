@@ -10,7 +10,7 @@ import org.neo4j.kernel.impl.util.FileUtils;
 
 public class GraphDB {
 
-	private static final String DB_PATH = "target/neo4j-dozer-db";
+	private static final String DB_PATH = "target/neo4j-db";
 	private static GraphDatabaseService graphDb = null;
 	
 	private GraphDB(){

@@ -14,7 +14,6 @@ import com.poc.neo4j.model.BaseEntity;
 
 public class PersistenceManager {
 	
-	private Converter converter = new Converter();
 	private static PersistenceManager manager = null;
 	
 	private PersistenceManager(){
@@ -52,7 +51,7 @@ public class PersistenceManager {
 
 			while (nodes.hasNext()) {
 				Node node = nodes.next();
-				T entity = converter.unmarshall(node, requiredType);
+				T entity = Converter.getConverter().unmarshall(node, requiredType);
 				System.out.println("Retrieved:" + entity);
 				entityList.add(entity);
 			}
