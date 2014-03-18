@@ -7,6 +7,14 @@ import org.neo4j.graphdb.Node;
 import com.poc.neo4j.dao.exception.ConverterException;
 import com.poc.neo4j.dao.util.ReflectionUtil;
 
+/**
+ * Conversion of a {@link Node} property value to any entity field value
+ * if the entity's field is of simple type like
+ * {@link Integer},  {@link Long},  {@link String} etc...
+ * 
+ * @author kayalv
+ *
+ */
 public class SimpleTypeConverter implements PropertyConverter{
 
 	@Override
@@ -19,8 +27,12 @@ public class SimpleTypeConverter implements PropertyConverter{
 	}
 
 	@Override
-	public <T> void unmarshall(Node source, T destination, String propertyName)
+	public <T> void unmarshall(Node source, T destination, String propertyName, T child)
 			throws ConverterException {
-		ReflectionUtil.setProperty(destination, propertyName, source.getProperty(propertyName));
+		if (child != null) {
+			ReflectionUtil.setProperty(destination, propertyName, child);
+		} else {
+			ReflectionUtil.setProperty(destination, propertyName, source.getProperty(propertyName));
+		}
 	}
 }

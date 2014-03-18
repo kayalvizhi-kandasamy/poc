@@ -1,4 +1,4 @@
-package com.poc.neo4j.dao.util;
+package com.poc.neo4j.dao.conversion;
 
 import java.lang.reflect.Field;
 
@@ -6,10 +6,8 @@ import org.apache.commons.lang.ArrayUtils;
 import org.neo4j.graphdb.Node;
 
 import com.poc.neo4j.dao.annotation.IgnoreField;
-import com.poc.neo4j.dao.conversion.ChildNodeConverter;
-import com.poc.neo4j.dao.conversion.PropertyConverter;
-import com.poc.neo4j.dao.conversion.PropertyConverterFactory;
 import com.poc.neo4j.dao.exception.ConverterException;
+import com.poc.neo4j.dao.util.ReflectionUtil;
 public class Converter {
 
 	private static Converter converter = null;
@@ -56,11 +54,11 @@ public class Converter {
 		Iterable<String> keys = sourceNode.getPropertyKeys();
 		for (String key : keys) {
 			PropertyConverter propertyConverter = PropertyConverterFactory.getUnMarshallingConverter(key);
-			propertyConverter.unmarshall(sourceNode, destinationObject, key);
+			propertyConverter.unmarshall(sourceNode, destinationObject, key, null);
         }
 		ReflectionUtil.setProperty(destinationObject, "id", sourceNode.getId());
 		ChildNodeConverter converter = new ChildNodeConverter();
-		converter.unmarshall(sourceNode, destinationObject, null);
+		converter.unmarshall(sourceNode, destinationObject, null, null);
         return destinationObject;
 	}
 	

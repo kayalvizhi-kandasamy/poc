@@ -5,6 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.lang.ClassUtils;
 import org.apache.log4j.Logger;
 
 import static com.poc.neo4j.dao.Constants.*;
@@ -20,12 +21,25 @@ public class ReflectionUtil {
 		if (object instanceof String || object instanceof Long  ||
 			object instanceof Double || object instanceof Integer ||
 			object instanceof Float || object instanceof Character ||
-			object instanceof Byte) {
+			object instanceof Byte || object instanceof Short ||
+			object instanceof Boolean) {
 			return true;
 		}
 		return false;	
 	}
 	
+	public static boolean isSimpleType(Class<?> type) {
+		
+		if (type.isPrimitive() ||  type.isAssignableFrom(String.class) || 
+			type.isAssignableFrom(Long.class)  || type.isAssignableFrom(Double.class) ||
+			type.isAssignableFrom(Integer.class)  || type.isAssignableFrom(Float.class) ||
+			type.isAssignableFrom(Character.class) || type.isAssignableFrom(Byte.class) ||
+			type.isAssignableFrom(Short.class) || type.isAssignableFrom(Boolean.class)) {
+			return true;
+		}
+		return false;	
+	}
+
 	public static Class<?> getType(Class<?> classObject, String fieldName) {
 		
 		Class<?> type = null;
@@ -142,14 +156,12 @@ public class ReflectionUtil {
 	 public static Class<?> registerClass(String className)
 	 throws ConverterException {
 		 
-		Class<?> associatedClass = null;
-		try {
-			if (className != null){
-				associatedClass = Class.forName(className);
-			}
-		} catch (ClassNotFoundException e1) {
+		 Class<?> associatedClass = null;
+		 try {
+			 associatedClass = ClassUtils.getClass(className);
+		} catch (ClassNotFoundException e) {
 			ConverterException ce =  new  ConverterException(CLASS_NOT_FOUND,
-					"Error while registering the class" + className, e1);
+					"Error while registering the class" + className, e);
 			LOGGER.error(ce);
 			throw ce;
 		}

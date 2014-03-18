@@ -9,7 +9,12 @@ import java.util.Set;
 
 import com.poc.neo4j.dao.util.ReflectionUtil;
 
-
+/**
+ * Defines factory methods to get property converters
+ * 
+ * @author kayalv
+ *
+ */
 public class PropertyConverterFactory {
 
 	private static Map<String, PropertyConverter> converters = new HashMap<String, PropertyConverter>();
@@ -53,6 +58,21 @@ public class PropertyConverterFactory {
 			propertyConverter = converters.get(SetConverter.class.getName());
 		} else if (nodeKey.startsWith(ARRAY_KEY)){
 			propertyConverter = converters.get(ArrayConverter.class.getName());
+		} else {
+			propertyConverter =  converters.get(SimpleTypeConverter.class.getName());
+		}
+		return propertyConverter;
+	}
+	
+	public static <T> PropertyConverter getUnMarshallingConverter(Class<T> type) {
+		
+		PropertyConverter propertyConverter = null;
+		if (type.isArray()){
+			propertyConverter = converters.get(ArrayConverter.class.getName());
+		} else if (type.isAssignableFrom(List.class)){
+			propertyConverter = converters.get(ListConverter.class.getName());
+		} else if (type.isAssignableFrom(Set.class)){
+			propertyConverter = converters.get(SetConverter.class.getName());
 		} else {
 			propertyConverter =  converters.get(SimpleTypeConverter.class.getName());
 		}

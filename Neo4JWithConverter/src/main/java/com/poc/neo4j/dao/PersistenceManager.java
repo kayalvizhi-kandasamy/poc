@@ -7,7 +7,7 @@ import java.util.List;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 
-import com.poc.neo4j.dao.util.Converter;
+import com.poc.neo4j.dao.conversion.Converter;
 import com.poc.neo4j.dao.util.GraphDbUtil;
 import com.poc.neo4j.model.BaseEntity;
 
@@ -62,7 +62,7 @@ public class PersistenceManager {
 		return entityList;
 	}
 
-	public void clearDb() {
+	public void clearDB() {
 		
 		System.out.println("Deleting all Entities and relationships");
 		Transaction tx = null;
@@ -74,6 +74,10 @@ public class PersistenceManager {
 		} catch (Exception e) {
 			System.err.println(e);
 		}
+	}
+	
+	public void shutDownDB() {
+		GraphDB.getDatabaseService().shutdown();
 	}
 	
 }

@@ -14,9 +14,16 @@ import com.poc.neo4j.dao.exception.ConverterException;
 import com.poc.neo4j.dao.util.GraphDbUtil;
 import com.poc.neo4j.dao.util.ReflectionUtil;
 import com.poc.neo4j.model.BaseEntity;
-
+/**
+ * Conversion of a {@link Node} property value to any entity field value
+ * if the entity's field is of {@link Set} type
+ * 
+ * @author kayalv
+ *
+ */
 public class SetConverter implements PropertyConverter {
 
+	
 	@Override
 	public <T> void marshall(T source, Node destination, String fieldName, Object sourceValue)
 			throws ConverterException {
@@ -40,16 +47,26 @@ public class SetConverter implements PropertyConverter {
 	}
 
 	@Override
-	public <T> void unmarshall(Node source, T destination, String propertyName)
+	public <T> void unmarshall(Node source, T destination, String propertyName, T child)
 			throws ConverterException {
 		
-		String fieldName = propertyName.substring(propertyName.lastIndexOf(SEPARATOR_DOT) + 1);
+		String fieldName = null;
+		if (child == null){
+			fieldName = propertyName.substring(propertyName.lastIndexOf(SEPARATOR_DOT) + 1);
+		} else {
+			fieldName = propertyName;
+		}
 		Set<Object> set = (Set<Object>) ReflectionUtil.getProperty(destination, fieldName);
 		if (set == null) {
 			set = new HashSet<Object>();
 			ReflectionUtil.setProperty(destination, fieldName, set);
 		} 
-		set.add(source.getProperty(propertyName));
+		if (child != null){
+			set.add(child);
+		} else {
+			set.add(source.getProperty(propertyName));
+		} 
+		
 	}
 
 }

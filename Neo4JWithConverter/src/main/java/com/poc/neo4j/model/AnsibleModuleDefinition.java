@@ -8,14 +8,21 @@
 package com.poc.neo4j.model;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import com.poc.neo4j.dao.annotation.IgnoreField;
 
 
 public class AnsibleModuleDefinition extends ModuleDefinition{
 
+	@IgnoreField
+	private static final long serialVersionUID = 3819692126574348045L;
+
 	private List<ScriptFile> playBooks = new ArrayList<ScriptFile>();
 	
-	private List<ScriptFile> roles = new ArrayList<ScriptFile>();
+	private Set<ScriptFile> roles = new HashSet<ScriptFile>();
 
 	public List<ScriptFile> getPlayBooks() {
 		return playBooks;
@@ -25,15 +32,11 @@ public class AnsibleModuleDefinition extends ModuleDefinition{
 		this.playBooks = playBooks;
 	}
 	
-//	public void addPlayBook(File file) {
-//		playBooks.add(new ScriptFile(file));
-//	}
-
-	public List<ScriptFile> getRoles() {
+	public Set<ScriptFile> getRoles() {
 		return roles;
 	}
 
-	public void setRoles(List<ScriptFile> roles) {
+	public void setRoles(Set<ScriptFile> roles) {
 		this.roles = roles;
 	}
 

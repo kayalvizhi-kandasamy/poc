@@ -13,7 +13,9 @@ public class Filter extends BaseEntity {
 
 	private List<String> values;
 	
-	private String[] array;
+	private String[] simpleArray;
+	
+	private Tuple[] complexArray;
 	
 	public Filter() {
 	}
@@ -31,19 +33,27 @@ public class Filter extends BaseEntity {
 		this.values = values;
 	}
 
-	public String[] getArray() {
-		return array;
+	public String[] getSimpleArray() {
+		return simpleArray;
 	}
 
-	public void setArray(String[] array) {
-		this.array = array;
+	public void setSimpleArray(String[] simpleArray) {
+		this.simpleArray = simpleArray;
+	}
+
+	public Tuple[] getComplexArray() {
+		return complexArray;
+	}
+
+	public void setComplexArray(Tuple[] complexArray) {
+		this.complexArray = complexArray;
 	}
 
 	@Override
 	public String toString() {
-		return "Filter [values=" + values + ", array=" + Arrays.toString(array)
-				+ "]";
+		return "Filter [values=" + values + ", simpleArray="
+				+ Arrays.toString(simpleArray) + ", complexArray="
+				+ Arrays.toString(complexArray) + "]";
 	}
-
 	
 }

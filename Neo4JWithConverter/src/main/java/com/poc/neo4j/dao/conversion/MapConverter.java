@@ -14,6 +14,13 @@ import com.poc.neo4j.dao.Constants;
 import com.poc.neo4j.dao.exception.ConverterException;
 import com.poc.neo4j.dao.util.ReflectionUtil;
 
+/**
+ * Conversion of a {@link Node} property value to any entity field value
+ * if the entity's field is of {@link Map} type
+ * 
+ * @author kayalv
+ *
+ */
 public class MapConverter implements PropertyConverter{
 
 	private static final Logger LOGGER = Logger.getLogger(MapConverter.class);
@@ -34,7 +41,7 @@ public class MapConverter implements PropertyConverter{
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T> void unmarshall(Node source, T destination, String propertyName)
+	public <T> void unmarshall(Node source, T destination, String propertyName, T child)
 			throws ConverterException {
 		
 		String fieldName = propertyName.substring(MAP_KEY.length() + 1, 

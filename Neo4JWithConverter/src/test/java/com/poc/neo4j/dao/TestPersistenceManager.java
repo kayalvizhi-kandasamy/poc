@@ -1,6 +1,9 @@
 package com.poc.neo4j.dao;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Test;
 
 import com.poc.neo4j.model.AnsibleModuleDefinition;
@@ -18,6 +22,7 @@ import com.poc.neo4j.model.IpPermissionInfo;
 import com.poc.neo4j.model.Module;
 import com.poc.neo4j.model.ScriptFile;
 import com.poc.neo4j.model.Task;
+import com.poc.neo4j.model.Tuple;
 
 public class TestPersistenceManager {
 
@@ -67,7 +72,7 @@ public class TestPersistenceManager {
 		List<ScriptFile> playBookSFList = new ArrayList<ScriptFile>();
 		playBookSFList.add(playBookSF1);
 		playBookSFList.add(playBookSF2);
-		List<ScriptFile> roleSFList = new ArrayList<ScriptFile>();
+		Set<ScriptFile> roleSFList = new HashSet<ScriptFile>();
 		roleSFList.add(roleSF);
 		anModDefinition.setPlayBooks(playBookSFList);
 		anModDefinition.setRoles(roleSFList);
@@ -126,7 +131,7 @@ public class TestPersistenceManager {
 		assertEquals(1, filters.size());
 		Filter retrievedFilter = filters.get(0);
 		assertNotNull(retrievedFilter.getId());
-//		assertEquals(filter.getValues(), retrievedFilter.getValues());//TODO list ordering
+		assertEquals(filter.getValues(), retrievedFilter.getValues());
 		assertEquals(filter.getValues().size(), retrievedFilter.getValues().size());
 		for (String value : values) {
 			assertTrue(retrievedFilter.getValues().contains(value));
@@ -171,6 +176,35 @@ public class TestPersistenceManager {
 		}
 	}
 	
+	@Test
+	public void testPersistEntity_EntityWithArray(){
+		
+		System.out.println("\nTestPersistenceManager.testPersistEntity_EntityWithArray()");
+		System.out.println("------------------------------------------------------------");
+		Filter filter = new Filter();
+		List<String> values = new ArrayList<String>();
+		values.add("Value1");
+		values.add("Value2");
+		filter.setValues(values);
+		
+		String[] simpleArray = new String[] {"Kayal", "Vizhi"};
+		filter.setSimpleArray(simpleArray);
+		Tuple[] complexArray = new Tuple[] {new Tuple("a", "A"), new Tuple("b", "B")};
+		filter.setComplexArray(complexArray);
+		
+		persistenceManager.persistEntity(filter);
+		
+		List<Filter> filters = persistenceManager.getEntities(Filter.class);
+		assertNotNull(filters);
+		assertEquals(1, filters.size());
+		Filter retrievedFilter = filters.get(0);
+		assertNotNull(retrievedFilter.getId());
+		assertEquals(filter.getValues(), retrievedFilter.getValues());
+		assertEquals(complexArray.length, retrievedFilter.getComplexArray().length);
+		for (int i = 0; i < complexArray.length; i++) {
+			assertEquals(complexArray[i], retrievedFilter.getComplexArray()[i]);
+		}
+	}
 	
 	@Test
 	public void testGetEntities(){
@@ -196,7 +230,7 @@ public class TestPersistenceManager {
 		List<ScriptFile> playBookSFList = new ArrayList<ScriptFile>();
 		playBookSFList.add(playBookSF1);
 		playBookSFList.add(playBookSF2);
-		List<ScriptFile> roleSFList = new ArrayList<ScriptFile>();
+		Set<ScriptFile> roleSFList = new HashSet<ScriptFile>();
 		roleSFList.add(roleSF);
 		anModDefinition.setPlayBooks(playBookSFList);
 		anModDefinition.setRoles(roleSFList);
@@ -244,7 +278,11 @@ public class TestPersistenceManager {
 	
 	@After
 	public void clearDb() {
-		persistenceManager.clearDb();
+		persistenceManager.clearDB();
 	}
 	
+	@AfterClass
+	public static void shutDown() {
+		persistenceManager.shutDownDB();
+	}
 }
