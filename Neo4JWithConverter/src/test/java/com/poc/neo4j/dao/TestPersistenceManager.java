@@ -1,9 +1,6 @@
 package com.poc.neo4j.dao;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -118,12 +115,17 @@ public class TestPersistenceManager {
 	public void testPersistEntity_EntityWithListOfSimpleType(){
 		
 		System.out.println("\nTestPersistenceManager.testPersistEntity_EntityWithListOfSimpleType()");
-		System.out.println("-----------------------------------------------------------------------");
+		System.out.println("------------------------------------------------------------------------");
 		Filter filter = new Filter();
 		List<String> values = new ArrayList<String>();
 		values.add("Value1");
 		values.add("Value2");
 		filter.setValues(values);
+		
+		List<Object> mixedValues = new ArrayList<Object>();
+		mixedValues.add("Hi");
+		mixedValues.add(0);
+		filter.setMixedValues(mixedValues);
 		persistenceManager.persistEntity(filter);
 		
 		List<Filter> filters = persistenceManager.getEntities(Filter.class);
@@ -132,10 +134,6 @@ public class TestPersistenceManager {
 		Filter retrievedFilter = filters.get(0);
 		assertNotNull(retrievedFilter.getId());
 		assertEquals(filter.getValues(), retrievedFilter.getValues());
-		assertEquals(filter.getValues().size(), retrievedFilter.getValues().size());
-		for (String value : values) {
-			assertTrue(retrievedFilter.getValues().contains(value));
-		}
 	}
 	
 	@Test
@@ -205,6 +203,49 @@ public class TestPersistenceManager {
 			assertEquals(complexArray[i], retrievedFilter.getComplexArray()[i]);
 		}
 	}
+	@Test
+	public void testPersistEntity_EntityWithCollectionOfMixedType(){
+		
+		System.out.println("\nTestPersistenceManager.testPersistEntity_EntityWithCollectionOfMixedType()");
+		System.out.println("----------------------------------------------------------------------------");
+		Filter filter = new Filter();
+		
+		List<Object> mixedValues = new ArrayList<Object>();
+		mixedValues.add("Hi");
+		mixedValues.add(0);
+		filter.setMixedValues(mixedValues);
+		persistenceManager.persistEntity(filter);
+		
+		List<Filter> filters = persistenceManager.getEntities(Filter.class);
+		assertNotNull(filters);
+		assertEquals(1, filters.size());
+		Filter retrievedFilter = filters.get(0);
+		assertNotNull(retrievedFilter.getId());
+		assertNull(retrievedFilter.getMixedValues());
+		assertNotSame(filter.getMixedValues(), retrievedFilter.getMixedValues());
+	}
+	
+	@Test
+	public void testPersistEntity_EntityWithArrayOfMixedType(){
+		
+		System.out.println("\nTestPersistenceManager.testPersistEntity_EntityWithArrayOfMixedType()");
+		System.out.println("----------------------------------------------------------------------------");
+		Filter filter = new Filter();
+		
+		Object[] objects = new Object[] {"Hi", new Integer(1)};
+		filter.setMixedArray(objects);
+		persistenceManager.persistEntity(filter);
+		
+		List<Filter> filters = persistenceManager.getEntities(Filter.class);
+		assertNotNull(filters);
+		assertEquals(1, filters.size());
+		Filter retrievedFilter = filters.get(0);
+		assertNotNull(retrievedFilter.getId());
+		assertNull(retrievedFilter.getMixedArray());
+		assertNotSame(filter.getMixedArray(), retrievedFilter.getMixedArray());
+	}
+	
+	
 	
 	@Test
 	public void testGetEntities(){

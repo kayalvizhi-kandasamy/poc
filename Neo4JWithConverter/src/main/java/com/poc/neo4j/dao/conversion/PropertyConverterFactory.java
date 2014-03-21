@@ -1,6 +1,6 @@
 package com.poc.neo4j.dao.conversion;
 
-import static com.poc.neo4j.dao.Constants.*;
+import static com.poc.neo4j.dao.Constants.MAP_KEY;
 
 import java.util.HashMap;
 import java.util.List;
@@ -21,11 +21,10 @@ public class PropertyConverterFactory {
 	
 	static{
 		converters.put(SimpleTypeConverter.class.getName(), new SimpleTypeConverter());
-		converters.put(ListConverter.class.getName(), new ListConverter());
+		converters.put(CollectionConverter.class.getName(), new CollectionConverter());
 		converters.put(MapConverter.class.getName(), new MapConverter());
 		converters.put(ChildNodeConverter.class.getName(), new ChildNodeConverter());
 		converters.put(ArrayConverter.class.getName(), new ArrayConverter());
-		converters.put(SetConverter.class.getName(), new SetConverter());
 	}
 	
 	public static PropertyConverter getMarshallingConverter(Object sourceValue) {
@@ -33,10 +32,8 @@ public class PropertyConverterFactory {
 		PropertyConverter propertyConverter = null;
 		if (ReflectionUtil.isSimpleType(sourceValue)){
 			propertyConverter = converters.get(SimpleTypeConverter.class.getName());
-    	} else if (sourceValue instanceof List) {
-    		propertyConverter = converters.get(ListConverter.class.getName());
-    	} else if (sourceValue instanceof Set) {
-    		propertyConverter = converters.get(SetConverter.class.getName());
+    	} else if (sourceValue instanceof List || sourceValue instanceof Set) {
+    		propertyConverter = converters.get(CollectionConverter.class.getName());
     	} else if (sourceValue instanceof Map<?,?> ) {
     		propertyConverter = converters.get(MapConverter.class.getName());
     	} else if (sourceValue instanceof Object[]) {
@@ -47,35 +44,37 @@ public class PropertyConverterFactory {
 		return propertyConverter;
 	}
 	
-	public static PropertyConverter getUnMarshallingConverter(String nodeKey) {
+	public static PropertyConverter getUnMarshallingConverter(Class<?> classObject, String key) {
 		
 		PropertyConverter propertyConverter = null;
-		if (nodeKey.startsWith(MAP_KEY)){
+		if (key.startsWith(MAP_KEY)){
 			propertyConverter = converters.get(MapConverter.class.getName());
-		} else if (nodeKey.startsWith(LIST_KEY)){
-			propertyConverter = converters.get(ListConverter.class.getName());
-		} else if (nodeKey.startsWith(SET_KEY)){
-			propertyConverter = converters.get(SetConverter.class.getName());
-		} else if (nodeKey.startsWith(ARRAY_KEY)){
-			propertyConverter = converters.get(ArrayConverter.class.getName());
 		} else {
-			propertyConverter =  converters.get(SimpleTypeConverter.class.getName());
+			Class<?> setterParamType = ReflectionUtil.getSetterMethodType(classObject, key);
+			if (setterParamType.isArray()){
+				propertyConverter = converters.get(ArrayConverter.class.getName());
+			} else if (setterParamType.isAssignableFrom(List.class) || 
+					setterParamType.isAssignableFrom(Set.class)){
+				propertyConverter = converters.get(CollectionConverter.class.getName());
+			} else {
+				propertyConverter =  converters.get(SimpleTypeConverter.class.getName());
+			}
 		}
 		return propertyConverter;
 	}
 	
-	public static <T> PropertyConverter getUnMarshallingConverter(Class<T> type) {
-		
-		PropertyConverter propertyConverter = null;
-		if (type.isArray()){
-			propertyConverter = converters.get(ArrayConverter.class.getName());
-		} else if (type.isAssignableFrom(List.class)){
-			propertyConverter = converters.get(ListConverter.class.getName());
-		} else if (type.isAssignableFrom(Set.class)){
-			propertyConverter = converters.get(SetConverter.class.getName());
-		} else {
-			propertyConverter =  converters.get(SimpleTypeConverter.class.getName());
-		}
-		return propertyConverter;
-	}
+//	public static <T> PropertyConverter getUnMarshallingConverter(Class<T> type) {
+//		
+//		PropertyConverter propertyConverter = null;
+//		if (type.isArray()){
+//			propertyConverter = converters.get(ArrayConverter.class.getName());
+//		} else if (type.isAssignableFrom(List.class)){
+//			propertyConverter = converters.get(ListConverter.class.getName());
+//		} else if (type.isAssignableFrom(Set.class)){
+//			propertyConverter = converters.get(SetConverter.class.getName());
+//		} else {
+//			propertyConverter =  converters.get(SimpleTypeConverter.class.getName());
+//		}
+//		return propertyConverter;
+//	}
 }

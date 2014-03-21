@@ -2,8 +2,6 @@ package com.poc.neo4j.dao.conversion;
 
 import static com.poc.neo4j.dao.Constants.AT_CLASS;
 
-import java.lang.reflect.Method;
-
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
@@ -47,18 +45,10 @@ public class ChildNodeConverter implements PropertyConverter {
 			} catch (ConverterException ce) {
 				continue;
 			}
-			String setterMethodName = "set" + relationType.substring(0, 1).toUpperCase() + relationType.substring(1);
-			Method setterMethod;
-			try {
-				setterMethod = ReflectionUtil.findMethod(destination.getClass(), setterMethodName, 1);
-			} catch (ConverterException e) {
-				continue;
-			}
-			Class<?>[] setterParamType = setterMethod.getParameterTypes();
-			assert (setterParamType != null && setterParamType.length == 1);
+
 			child = (T) unmarshallChild(childNode, associatedClass);
-			
-			PropertyConverter propertyConverter = PropertyConverterFactory.getUnMarshallingConverter(setterParamType[0]);
+			PropertyConverter propertyConverter = 
+					PropertyConverterFactory.getUnMarshallingConverter(destination.getClass(), relationType);
 			propertyConverter.unmarshall(childNode, destination, relationType, child);
 			
 //			if (endNode.hasRelationship(Direction.OUTGOING)) {
@@ -76,7 +66,7 @@ public class ChildNodeConverter implements PropertyConverter {
 		T child = ReflectionUtil.newInstance(childClass);
 		Iterable<String> keys = childNode.getPropertyKeys();
 		for (String key : keys) {
-			PropertyConverter propertyConverter = PropertyConverterFactory.getUnMarshallingConverter(key);
+			PropertyConverter propertyConverter = PropertyConverterFactory.getUnMarshallingConverter(childClass, key);
 			propertyConverter.unmarshall(childNode, child, key, null);
         }
 		ReflectionUtil.setProperty(child, "id", childNode.getId());

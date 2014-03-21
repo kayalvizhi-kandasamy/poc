@@ -13,9 +13,13 @@ public class Filter extends BaseEntity {
 
 	private List<String> values;
 	
+	private List<Object> mixedValues;
+	
 	private String[] simpleArray;
 	
 	private Tuple[] complexArray;
+	
+	private Object[] mixedArray;
 	
 	public Filter() {
 	}
@@ -49,11 +53,28 @@ public class Filter extends BaseEntity {
 		this.complexArray = complexArray;
 	}
 
+	public List<Object> getMixedValues() {
+		return mixedValues;
+	}
+
+	public void setMixedValues(List<Object> mixedValues) {
+		this.mixedValues = mixedValues;
+	}
+
+	public Object[] getMixedArray() {
+		return mixedArray;
+	}
+
+	public void setMixedArray(Object[] mixedArray) {
+		this.mixedArray = mixedArray;
+	}
+
 	@Override
 	public String toString() {
-		return "Filter [values=" + values + ", simpleArray="
-				+ Arrays.toString(simpleArray) + ", complexArray="
-				+ Arrays.toString(complexArray) + "]";
+		return "Filter [values=" + values + ", mixedValues=" + mixedValues
+				+ ", simpleArray=" + Arrays.toString(simpleArray)
+				+ ", complexArray=" + Arrays.toString(complexArray)
+				+ ", mixedArray=" + Arrays.toString(mixedArray) + "]";
 	}
 	
 }

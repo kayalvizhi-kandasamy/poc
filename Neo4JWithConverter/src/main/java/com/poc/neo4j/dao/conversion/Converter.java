@@ -53,7 +53,7 @@ public class Converter {
 		T destinationObject = ReflectionUtil.newInstance(destinationClass);
 		Iterable<String> keys = sourceNode.getPropertyKeys();
 		for (String key : keys) {
-			PropertyConverter propertyConverter = PropertyConverterFactory.getUnMarshallingConverter(key);
+			PropertyConverter propertyConverter = PropertyConverterFactory.getUnMarshallingConverter(destinationClass, key);
 			propertyConverter.unmarshall(sourceNode, destinationObject, key, null);
         }
 		ReflectionUtil.setProperty(destinationObject, "id", sourceNode.getId());

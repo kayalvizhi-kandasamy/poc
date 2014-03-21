@@ -167,4 +167,19 @@ public class ReflectionUtil {
 		}
 		return associatedClass;
 	 }
+	 
+	 public static Class<?> getSetterMethodType(Class<?> classObject, String fieldName) {
+		 
+	    String setterMethodName = "set" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
+		Method setterMethod;
+		try {
+			setterMethod = ReflectionUtil.findMethod(classObject, setterMethodName, 1);
+		} catch (ConverterException e) {
+			System.err.println(e);//TODO Logging
+			return null;
+		}
+		Class<?>[] setterParamType = setterMethod.getParameterTypes();
+		assert (setterParamType != null && setterParamType.length == 1);
+		return setterParamType[0];
+	 }
 }
