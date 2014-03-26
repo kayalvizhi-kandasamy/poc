@@ -9,7 +9,6 @@ import org.neo4j.graphdb.Relationship;
 import com.poc.neo4j.dao.exception.ConverterException;
 import com.poc.neo4j.dao.util.GraphDbUtil;
 import com.poc.neo4j.dao.util.ReflectionUtil;
-import com.poc.neo4j.model.BaseEntity;
 
 /**
  * Conversion of a {@link Node} property value to any entity field value
@@ -24,7 +23,7 @@ public class ChildNodeConverter implements PropertyConverter {
 	
 	public <T> void marshall(T source, Node destination, String fieldName, Object sourceValue)
 			throws ConverterException {
-		GraphDbUtil.convertAndPersistNode((BaseEntity) sourceValue, destination, fieldName);
+		GraphDbUtil.convertAndPersistNode(sourceValue, destination, fieldName);
 	}
 
 	@SuppressWarnings("unchecked")
