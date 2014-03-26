@@ -13,8 +13,10 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Test;
 
+import com.poc.neo4j.model.AccountInfo;
 import com.poc.neo4j.model.AnsibleModuleDefinition;
 import com.poc.neo4j.model.Filter;
+import com.poc.neo4j.model.InstanceProvider;
 import com.poc.neo4j.model.IpPermissionInfo;
 import com.poc.neo4j.model.Module;
 import com.poc.neo4j.model.ScriptFile;
@@ -245,6 +247,34 @@ public class TestPersistenceManager {
 		assertNotSame(filter.getMixedArray(), retrievedFilter.getMixedArray());
 	}
 	
+	@Test
+	public void testPersistEntity_EntityWithEnum(){
+		
+		System.out.println("\nTestPersistenceManager.testPersistEntity_EntityWithEnum()");
+		System.out.println("------------------------------------------------------------");
+		
+		AccountInfo acctInfo = new AccountInfo(InstanceProvider.AWS, "accesskey", "secretKey");
+		persistenceManager.persistEntity(acctInfo);
+		
+		List<AccountInfo> accounts = persistenceManager.getEntities(AccountInfo.class);
+		assertNotNull(accounts);
+		assertEquals(1, accounts.size());
+		assertSame(acctInfo.getType(), accounts.get(0).getType());
+		
+//		TODO
+//		AccountInfo acctInfo1 = new AccountInfo(InstanceProvider.AWS, "accesskey", "secretKey");
+//		List<InstanceProvider> types =  new ArrayList<InstanceProvider>(0);
+//		types.add(InstanceProvider.AWS);
+//		types.add(InstanceProvider.OPENSTACK);
+//		acctInfo1.setTypes(types);
+//		persistenceManager.persistEntity(acctInfo1);
+//		
+//		accounts = persistenceManager.getEntities(AccountInfo.class);
+//		assertNotNull(accounts);
+//		assertEquals(1, accounts.size());
+//		assertSame(acctInfo.getType(), accounts.get(0).getType());
+//		assertSame(acctInfo.getTypes(), accounts.get(0).getTypes());
+	}
 	
 	
 	@Test

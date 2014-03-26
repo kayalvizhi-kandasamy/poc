@@ -25,6 +25,7 @@ public class PropertyConverterFactory {
 		converters.put(MapConverter.class.getName(), new MapConverter());
 		converters.put(ChildNodeConverter.class.getName(), new ChildNodeConverter());
 		converters.put(ArrayConverter.class.getName(), new ArrayConverter());
+		converters.put(EnumConverter.class.getName(), new EnumConverter());
 	}
 	
 	public static PropertyConverter getMarshallingConverter(Object sourceValue) {
@@ -38,6 +39,8 @@ public class PropertyConverterFactory {
     		propertyConverter = converters.get(MapConverter.class.getName());
     	} else if (sourceValue instanceof Object[]) {
     		propertyConverter = converters.get(ArrayConverter.class.getName());
+    	} else if (sourceValue instanceof Enum) {
+    		propertyConverter = converters.get(EnumConverter.class.getName());
     	} else {
     		propertyConverter = converters.get(ChildNodeConverter.class.getName());
     	}
@@ -53,6 +56,8 @@ public class PropertyConverterFactory {
 			Class<?> setterParamType = ReflectionUtil.getSetterMethodType(classObject, key);
 			if (setterParamType.isArray()){
 				propertyConverter = converters.get(ArrayConverter.class.getName());
+			} else if (setterParamType.isEnum()){
+				propertyConverter = converters.get(EnumConverter.class.getName());
 			} else if (setterParamType.isAssignableFrom(List.class) || 
 					setterParamType.isAssignableFrom(Set.class)){
 				propertyConverter = converters.get(CollectionConverter.class.getName());
@@ -62,19 +67,5 @@ public class PropertyConverterFactory {
 		}
 		return propertyConverter;
 	}
-	
-//	public static <T> PropertyConverter getUnMarshallingConverter(Class<T> type) {
-//		
-//		PropertyConverter propertyConverter = null;
-//		if (type.isArray()){
-//			propertyConverter = converters.get(ArrayConverter.class.getName());
-//		} else if (type.isAssignableFrom(List.class)){
-//			propertyConverter = converters.get(ListConverter.class.getName());
-//		} else if (type.isAssignableFrom(Set.class)){
-//			propertyConverter = converters.get(SetConverter.class.getName());
-//		} else {
-//			propertyConverter =  converters.get(SimpleTypeConverter.class.getName());
-//		}
-//		return propertyConverter;
-//	}
+
 }
