@@ -182,4 +182,27 @@ public class ReflectionUtil {
 		assert (setterParamType != null && setterParamType.length == 1);
 		return setterParamType[0];
 	 }
+	 
+	 @SuppressWarnings({ "unchecked", "rawtypes" })
+	public static Enum<?>  getEnumValue(String nodePropertyValue) {
+		 
+		String type = nodePropertyValue.substring(nodePropertyValue.indexOf(SEPARATOR_DOT) + 1, 
+				nodePropertyValue.lastIndexOf(SEPARATOR_DOT));
+		String fieldValue = nodePropertyValue.substring(nodePropertyValue.lastIndexOf(SEPARATOR_DOT) + 1);
+		Enum<?> enumVal = null;
+		try {
+			enumVal = Enum.valueOf((Class<Enum>) Class.forName(type), fieldValue);
+		} catch (ClassNotFoundException e) {
+			ConverterException ce =  new  ConverterException(CLASS_NOT_FOUND,
+					"Error while registering the class" + type, e);
+			LOGGER.error(ce);
+		}
+		return enumVal;
+	 }
+	 
+	 public static String getEnumKey (Enum<?> enumObject) {
+		 return ENUM_KEY + SEPARATOR_DOT + 
+				 enumObject.getClass().getName() + SEPARATOR_DOT + 
+			((Enum<?>)enumObject).name();
+	 }
 }

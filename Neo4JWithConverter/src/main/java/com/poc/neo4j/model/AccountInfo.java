@@ -1,5 +1,6 @@
 package com.poc.neo4j.model;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.poc.neo4j.dao.annotation.IgnoreField;
@@ -14,6 +15,7 @@ public class AccountInfo extends BaseEntity{
 	private String accountId;
 	private InstanceProvider type; // AWS or OpenStack or Physical etc..
 	private List<InstanceProvider> types; 
+	private InstanceProvider[] arrayTypes;
 	private String ownerAlias; //optional
 	private String accessKey;
 	private String secretKey;
@@ -92,10 +94,19 @@ public class AccountInfo extends BaseEntity{
 		this.types = types;
 	}
 
+	public InstanceProvider[] getArrayTypes() {
+		return arrayTypes;
+	}
+
+	public void setArrayTypes(InstanceProvider[] arrayTypes) {
+		this.arrayTypes = arrayTypes;
+	}
+
 	@Override
 	public String toString() {
 		return "AccountInfo [accountId=" + accountId + ", type=" + type
-				+ ", types=" + types + ", ownerAlias=" + ownerAlias
+				+ ", types=" + types + ", arrayTypes="
+				+ Arrays.toString(arrayTypes) + ", ownerAlias=" + ownerAlias
 				+ ", accessKey=" + accessKey + ", secretKey=" + secretKey
 				+ ", regionName=" + regionName + "]";
 	}

@@ -14,7 +14,6 @@ import org.neo4j.graphdb.Node;
 
 import com.poc.neo4j.dao.Constants;
 import com.poc.neo4j.dao.exception.ConverterException;
-import com.poc.neo4j.dao.util.GraphDbUtil;
 import com.poc.neo4j.dao.util.ReflectionUtil;
 import com.poc.neo4j.model.BaseEntity;
 
@@ -29,6 +28,7 @@ public class CollectionConverter implements PropertyConverter {
 		Collection<?> collection = (Collection<?>) sourceValue;
 		Object[] simpleTypeArray = null;
 		Object[] complexTypeArray = null;
+		String[] enumTypeArray = null;
 		int i = 0;
 		boolean nullValuePresentInArray = false;
 		for (Iterator<?> iterator = collection.iterator(); iterator.hasNext();) {
@@ -48,10 +48,25 @@ public class CollectionConverter implements PropertyConverter {
 					nullValuePresentInArray = true;
 				}
 			} else {
-				if (complexTypeArray == null) {
-					complexTypeArray = (Object[]) Array.newInstance(value.getClass(), collection.size());
-				}
-				if (value instanceof BaseEntity){
+				Class<?> valueClass = value.getClass();
+				
+				if (valueClass.isEnum()){
+					if (enumTypeArray == null) {
+						enumTypeArray = (String[]) Array.newInstance(String.class, collection.size());
+					}
+					try{
+						enumTypeArray[i++] = ReflectionUtil.getEnumKey((Enum<?>)value);
+					} catch(ArrayStoreException e) {
+						String error = Constants.ERROR_TYPE + ".\nExpected type is Enum"
+								+ " But the object " + value + "[" + i + "] is of different type ";
+						LOGGER.error(error);
+						System.err.println(error);
+						nullValuePresentInArray = true;
+					}
+				} else if (value instanceof BaseEntity){
+					if (complexTypeArray == null) {
+						complexTypeArray = (Object[]) Array.newInstance(valueClass, collection.size());
+					}
 					try{
 						complexTypeArray[i++] = value;
 					} catch(ArrayStoreException e) {
@@ -70,11 +85,16 @@ public class CollectionConverter implements PropertyConverter {
 		}
 		
 		if (simpleTypeArray != null && !nullValuePresentInArray) {
-			destination.setProperty(fieldName, simpleTypeArray);
+			PropertyConverterFactory.getConverter(SimpleTypeConverter.class.getName()).
+				marshall(source, destination, fieldName, simpleTypeArray);
 		} else if (complexTypeArray != null && !nullValuePresentInArray) {
+			PropertyConverter converter = PropertyConverterFactory.getConverter(ChildNodeConverter.class.getName());
 			for ( i = 0; i < complexTypeArray.length; i++) {
-				GraphDbUtil.convertAndPersistNode((BaseEntity) complexTypeArray[i], destination, fieldName);
+				converter.marshall(source, destination, fieldName, complexTypeArray[i]);
 			}
+		} else if (enumTypeArray != null && !nullValuePresentInArray) {
+			PropertyConverterFactory.getConverter(EnumConverter.class.getName()).
+					marshall(source, destination, fieldName, enumTypeArray);
 		} else {
 			LOGGER.error(Constants.ERROR_TYPE);
 			System.err.println(Constants.ERROR_TYPE);
@@ -87,7 +107,7 @@ public class CollectionConverter implements PropertyConverter {
 	public <T> void unmarshall(Node source, T destination, String propertyName,
 			T unmarshalledChild) throws ConverterException {
 		
-		Class<?> collectionType = ReflectionUtil.getSetterMethodType(destination.getClass(), propertyName);
+		Class<?> collectionType = ReflectionUtil.getType(destination.getClass(), propertyName);
 		Collection<Object> collection = (Collection<Object>) ReflectionUtil.getProperty(destination, propertyName);
 		if (collection == null && unmarshalledChild != null){
 			if (collectionType.isAssignableFrom(List.class)){
@@ -100,7 +120,28 @@ public class CollectionConverter implements PropertyConverter {
 		} else if (unmarshalledChild != null){
 			collection.add(unmarshalledChild);
 		} else {
-			collection = Arrays.asList((Object[]) source.getProperty(propertyName));
+			Object propertyValue = source.getProperty(propertyName);
+			collection = Arrays.asList((Object[]) propertyValue);
+			Collection<Object> tempCollection = null;
+			if( collection != null && collection.size() > 0) {
+				for (Iterator<Object> iterator = collection.iterator(); iterator
+						.hasNext();) {
+					Object object = (Object) iterator.next();
+					if (object != null && object instanceof String && ((String)object).startsWith(Constants.ENUM_KEY)) {
+						Enum<?> value = ReflectionUtil.getEnumValue((String) object);
+						if (tempCollection == null){
+							tempCollection = new ArrayList<>(collection.size());
+						}
+						tempCollection.add(value);
+					} else {
+						break;
+					}
+				}
+				if (tempCollection != null) {
+					collection = tempCollection;
+				}
+			}
+			
 			if (collectionType.isAssignableFrom(Set.class)) {
 				collection = new HashSet<Object>(collection);
 			}

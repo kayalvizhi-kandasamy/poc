@@ -261,19 +261,41 @@ public class TestPersistenceManager {
 		assertEquals(1, accounts.size());
 		assertSame(acctInfo.getType(), accounts.get(0).getType());
 		
-//		TODO
-//		AccountInfo acctInfo1 = new AccountInfo(InstanceProvider.AWS, "accesskey", "secretKey");
-//		List<InstanceProvider> types =  new ArrayList<InstanceProvider>(0);
-//		types.add(InstanceProvider.AWS);
-//		types.add(InstanceProvider.OPENSTACK);
-//		acctInfo1.setTypes(types);
-//		persistenceManager.persistEntity(acctInfo1);
-//		
-//		accounts = persistenceManager.getEntities(AccountInfo.class);
-//		assertNotNull(accounts);
-//		assertEquals(1, accounts.size());
-//		assertSame(acctInfo.getType(), accounts.get(0).getType());
-//		assertSame(acctInfo.getTypes(), accounts.get(0).getTypes());
+		AccountInfo acctInfo1 = new AccountInfo(InstanceProvider.AWS, "accesskey1", "secretKey1");
+		List<InstanceProvider> types =  new ArrayList<InstanceProvider>(0);
+		types.add(InstanceProvider.AWS);
+		types.add(InstanceProvider.OPENSTACK);
+		acctInfo1.setTypes(types);
+		persistenceManager.persistEntity(acctInfo1);
+		
+		String query = "MATCH (acct:AccountInfo{accessKey:\"accesskey1\"}) RETURN acct";
+		
+		accounts = persistenceManager.getEntities(query, "acct", AccountInfo.class);
+		assertNotNull(accounts);
+		assertEquals(1, accounts.size());
+		assertSame(acctInfo1.getType(), accounts.get(0).getType());
+		assertEquals(acctInfo1.getTypes().size(), accounts.get(0).getTypes().size());
+		assertTrue(accounts.get(0).getTypes().size()==2);
+		assertSame(acctInfo1.getTypes().get(0), accounts.get(0).getTypes().get(0));
+		assertSame(acctInfo1.getTypes().get(1), accounts.get(0).getTypes().get(1));
+		
+		AccountInfo acctInfo2 = new AccountInfo(InstanceProvider.AWS, "accesskey2", "secretKey2");
+		InstanceProvider[] arrayTypes = new InstanceProvider[2];
+		arrayTypes[0] = InstanceProvider.AWS;
+		arrayTypes[1] = InstanceProvider.OPENSTACK;
+		acctInfo2.setArrayTypes(arrayTypes);
+		persistenceManager.persistEntity(acctInfo2);
+		
+		query = "MATCH (acct:AccountInfo{accessKey:\"accesskey2\"}) RETURN acct";
+		
+		accounts = persistenceManager.getEntities(query, "acct", AccountInfo.class);
+		assertNotNull(accounts);
+		assertEquals(1, accounts.size());
+		assertNotNull(accounts.get(0).getArrayTypes());
+		assertTrue(accounts.get(0).getArrayTypes().length == 2);
+		
+		assertSame(InstanceProvider.AWS, accounts.get(0).getArrayTypes()[0]);
+		assertSame(InstanceProvider.OPENSTACK, accounts.get(0).getArrayTypes()[1]);
 	}
 	
 	

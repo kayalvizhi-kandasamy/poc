@@ -8,7 +8,6 @@ import org.neo4j.graphdb.Node;
 
 import com.poc.neo4j.dao.Constants;
 import com.poc.neo4j.dao.exception.ConverterException;
-import com.poc.neo4j.dao.util.GraphDbUtil;
 import com.poc.neo4j.dao.util.ReflectionUtil;
 import com.poc.neo4j.model.BaseEntity;
 
@@ -34,10 +33,25 @@ public class ArrayConverter implements PropertyConverter {
 			return;
 		}
 		Object[] complexTypeArray = null;
+		String[] enumTypeArray = null;
 		boolean nullValuePresentInArray = false;
 		for (int i = 0; i < objects.length; i++) {
 			Object value =  objects[i];
-			if (!ReflectionUtil.isSimpleType(value)) {
+			Class<?> valueClass = value.getClass();
+			if (valueClass.isEnum()){
+				if (enumTypeArray == null) {
+					enumTypeArray = (String[]) Array.newInstance(String.class, objects.length);
+				}
+				try{
+					enumTypeArray[i] = ReflectionUtil.getEnumKey((Enum<?>)value);
+				} catch(ArrayStoreException e) {
+					String error = Constants.ERROR_TYPE + ".\nExpected type is Enum"
+							+ " But the object " + value + "[" + i + "] is of different type ";
+					LOGGER.error(error);
+					System.err.println(error);
+					nullValuePresentInArray = true;
+				}
+			} else if (!ReflectionUtil.isSimpleType(value)) {
 				
 				if (complexTypeArray == null) {
 					complexTypeArray = (Object[]) Array.newInstance(value.getClass(), objects.length);
@@ -60,12 +74,17 @@ public class ArrayConverter implements PropertyConverter {
 			}
 		}
 		
-		if (complexTypeArray == null) {
-			destination.setProperty(fieldName, objects);
+		if (complexTypeArray == null && enumTypeArray == null) {
+			PropertyConverterFactory.getConverter(SimpleTypeConverter.class.getName()).
+			marshall(source, destination, fieldName, objects);
 		} else if (complexTypeArray != null && objects.length == complexTypeArray.length && !nullValuePresentInArray) {
+			PropertyConverter converter = PropertyConverterFactory.getConverter(ChildNodeConverter.class.getName());
 			for (int i = 0; i < complexTypeArray.length; i++) {
-				GraphDbUtil.convertAndPersistNode((BaseEntity) complexTypeArray[i], destination, fieldName);
+				converter.marshall(source, destination, fieldName, complexTypeArray[i]);
 			}
+		} else if (enumTypeArray != null && !nullValuePresentInArray) {
+			PropertyConverterFactory.getConverter(EnumConverter.class.getName()).
+			marshall(source, destination, fieldName, enumTypeArray);
 		} else {
 			LOGGER.error(Constants.ERROR_TYPE);
 			System.err.println(Constants.ERROR_TYPE);
@@ -79,6 +98,13 @@ public class ArrayConverter implements PropertyConverter {
 		Class<?> componentType = ReflectionUtil.getType(destination.getClass(), propertyName).getComponentType();
 		if (ReflectionUtil.isSimpleType(componentType)) {
 			ReflectionUtil.setProperty(destination, propertyName, source.getProperty(propertyName));
+		} else if (componentType.isEnum()) {
+			String[] stringObjects = (String[]) source.getProperty(propertyName);
+			Object[] enumObjects = (Object[]) Array.newInstance(componentType, stringObjects.length);
+			for (int i = 0; i < stringObjects.length; i++) {
+				enumObjects[i] = ReflectionUtil.getEnumValue(stringObjects[i]);
+			}
+			ReflectionUtil.setProperty(destination, propertyName, enumObjects);
 		} else if (unmarshalledChild != null) {
 			int index = -1;
 			Object objects =  ReflectionUtil.getProperty(destination, propertyName);

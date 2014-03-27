@@ -19,5 +19,6 @@ public interface Constants {
 	String LIST_KEY ="LIST.KEY";
 	String SET_KEY ="SET.KEY";
 	String ARRAY_KEY ="ARRAY.KEY";
+	String ENUM_KEY ="ENUM_KEY";
 	String SEPARATOR_DOT = ".";
 }

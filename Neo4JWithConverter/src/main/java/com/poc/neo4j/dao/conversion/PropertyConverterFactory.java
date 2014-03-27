@@ -67,5 +67,9 @@ public class PropertyConverterFactory {
 		}
 		return propertyConverter;
 	}
+	
+	public static PropertyConverter getConverter(String name) {
+		return converters.get(name);
+	}
 
 }
