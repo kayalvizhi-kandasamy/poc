@@ -68,6 +68,11 @@ public class PropertyConverterFactory {
 		return propertyConverter;
 	}
 	
+	/**
+	 * 
+	 * @param name
+	 * @return
+	 */
 	public static PropertyConverter getConverter(String name) {
 		return converters.get(name);
 	}

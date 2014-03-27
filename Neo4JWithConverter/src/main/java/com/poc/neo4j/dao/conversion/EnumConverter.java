@@ -29,7 +29,7 @@ public class EnumConverter implements PropertyConverter{
 	@Override
 	public <T> void unmarshall(Node source, T destination, String propertyName, T child)
 			throws ConverterException {
-		if (child != null) {//TODO to check
+		if (child != null) {//TODO to be checked 
 			ReflectionUtil.setProperty(destination, propertyName, child);
 		} else {
 			Enum<?> value = ReflectionUtil.getEnumValue((String) source.getProperty(propertyName));

@@ -291,6 +291,7 @@ public class TestPersistenceManager {
 		accounts = persistenceManager.getEntities(query, "acct", AccountInfo.class);
 		assertNotNull(accounts);
 		assertEquals(1, accounts.size());
+		assertNotNull(accounts.get(0).getType());
 		assertNotNull(accounts.get(0).getArrayTypes());
 		assertTrue(accounts.get(0).getArrayTypes().length == 2);
 		

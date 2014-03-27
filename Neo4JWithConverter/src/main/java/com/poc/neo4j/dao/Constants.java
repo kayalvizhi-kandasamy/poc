@@ -1,7 +1,11 @@
 package com.poc.neo4j.dao;
 
 import com.poc.neo4j.model.BaseEntity;
-
+/**
+ * 
+ * @author kayalv
+ *
+ */
 public interface Constants {
 	
 	String AT_CLASS = "@Class";

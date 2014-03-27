@@ -51,6 +51,7 @@ public class ReflectionUtil {
 		} catch (NoSuchFieldException | SecurityException e) {
 			ConverterException ce = new ConverterException(FIELD_NOT_FOUND,"Field:[" + fieldName + 
 					"] not found in Class[" + classObject.getName() + "]", e);
+			System.err.println(ce);
 			LOGGER.error(ce);
 		}
 		return type;

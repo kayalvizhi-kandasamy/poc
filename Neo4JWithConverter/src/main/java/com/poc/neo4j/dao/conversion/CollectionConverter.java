@@ -43,7 +43,7 @@ public class CollectionConverter implements PropertyConverter {
 					String error = Constants.ERROR_TYPE + ".\nExpected type is " +  
 							simpleTypeArray.getClass().getComponentType()
 							+ " But the object " + value + "[" + i + "] is of different type ";
-					LOGGER.error(error);
+					LOGGER.error(error, e);
 					System.err.println(error);
 					nullValuePresentInArray = true;
 				}
@@ -59,7 +59,7 @@ public class CollectionConverter implements PropertyConverter {
 					} catch(ArrayStoreException e) {
 						String error = Constants.ERROR_TYPE + ".\nExpected type is Enum"
 								+ " But the object " + value + "[" + i + "] is of different type ";
-						LOGGER.error(error);
+						LOGGER.error(error, e);
 						System.err.println(error);
 						nullValuePresentInArray = true;
 					}
@@ -73,7 +73,7 @@ public class CollectionConverter implements PropertyConverter {
 						String error = Constants.ERROR_TYPE + ".\nExpected type is " +  
 								complexTypeArray.getClass().getComponentType()
 								+ " But the object " + value + "[" + i + "] is of different type ";
-						LOGGER.error(error);
+						LOGGER.error(error, e);
 						System.err.println(error);
 						nullValuePresentInArray = true;
 					}

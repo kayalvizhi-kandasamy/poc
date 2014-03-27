@@ -106,7 +106,7 @@ public class AccountInfo extends BaseEntity{
 	public String toString() {
 		return "AccountInfo [accountId=" + accountId + ", type=" + type
 				+ ", types=" + types + ", arrayTypes="
-				+ Arrays.toString(arrayTypes) + ", ownerAlias=" + ownerAlias
+				+  Arrays.toString(arrayTypes) + ", ownerAlias=" + ownerAlias
 				+ ", accessKey=" + accessKey + ", secretKey=" + secretKey
 				+ ", regionName=" + regionName + "]";
 	}
