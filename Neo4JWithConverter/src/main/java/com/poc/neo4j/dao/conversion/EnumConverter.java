@@ -12,7 +12,7 @@ import com.poc.neo4j.dao.util.ReflectionUtil;
  * @author kayalv
  *
  */
-public class EnumConverter implements PropertyConverter{
+public class EnumConverter implements CustomPropertyConverter {
 
 	
 	@Override
@@ -22,20 +22,37 @@ public class EnumConverter implements PropertyConverter{
 		if (sourceValue.getClass().isArray()) {
 			destination.setProperty(fieldName,sourceValue);
 		} else {
-			destination.setProperty(fieldName, ReflectionUtil.getEnumKey((Enum<?>)sourceValue));
+			destination.setProperty(fieldName, getMarshalledVlue(sourceValue));
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public <T> void unmarshall(Node source, T destination, String propertyName, T child)
+	public <T> Object unmarshall(Node source, T destination, String propertyName, T child)
 			throws ConverterException {
+		Enum<?> value = null;
 		if (child != null) {//TODO to be checked 
-			ReflectionUtil.setProperty(destination, propertyName, child);
 		} else {
-			Enum<?> value = ReflectionUtil.getEnumValue((String) source.getProperty(propertyName));
-			if (value != null) {
-				ReflectionUtil.setProperty(destination, propertyName, value);
-			}
+			value = (Enum<?>) getUnMarshalledVlue(
+						(Class<Enum>) ReflectionUtil.getType(destination.getClass(), propertyName),  
+						(String) source.getProperty(propertyName));
+
 		}
+		return value;
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public Object getUnMarshalledVlue(Class<?> type, Object stringValue)
+			throws ConverterException {
+		
+		return Enum.valueOf((Class<Enum>)type, (String) stringValue);
+	}
+
+	@Override
+	public Object getMarshalledVlue(Object sourceValue)
+			throws ConverterException {
+		
+		return ((Enum<?>)sourceValue).name();
 	}
 }

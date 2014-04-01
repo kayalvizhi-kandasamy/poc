@@ -26,88 +26,105 @@ public class CollectionConverter implements PropertyConverter {
 			Object sourceValue) throws ConverterException {
 		
 		Collection<?> collection = (Collection<?>) sourceValue;
-		Object[] simpleTypeArray = null;
 		Object[] complexTypeArray = null;
-		String[] enumTypeArray = null;
+		boolean isSimpleType = false;
+		boolean isDateType = false;
+		boolean isEnumType = false;
+		boolean isBaseEntityType = false;
+		boolean isErrorType = false;
+		Class<?> expectedType = null;
 		int i = 0;
 		boolean nullValuePresentInArray = false;
+		CustomPropertyConverter simplePropertyConverter = null;
+		
 		for (Iterator<?> iterator = collection.iterator(); iterator.hasNext();) {
 			Object value = (Object) iterator.next();
+			Object marshalledValue = null;
 			if (ReflectionUtil.isSimpleType(value)) {
-				if (simpleTypeArray == null) {
-					simpleTypeArray = (Object[]) Array.newInstance(value.getClass(), collection.size());
+				if (complexTypeArray == null) {
+					isSimpleType = true;
+					expectedType = value.getClass();
+					complexTypeArray = (Object[]) Array.newInstance(expectedType, collection.size());
 				}
+				marshalledValue = value;
+			} else {
+				Class<?> valueClass = value.getClass();
+				if (valueClass.isEnum()){
+					if (complexTypeArray == null) {
+						isEnumType = true;
+						expectedType = valueClass;
+						complexTypeArray = (String[]) Array.newInstance(String.class, collection.size());
+						simplePropertyConverter =
+								PropertyConverterFactory.getSimplePropertyConverter(EnumConverter.class.getName());
+					}
+					marshalledValue = simplePropertyConverter.getMarshalledVlue(value);
+				} else if (ReflectionUtil.isDateType(value)){
+					if (complexTypeArray == null) {
+						isDateType = true;
+						expectedType = value.getClass();
+						complexTypeArray = (String[]) Array.newInstance(String.class, collection.size());
+						simplePropertyConverter =
+								PropertyConverterFactory.getSimplePropertyConverter(DateConverter.class.getName());
+					}
+					marshalledValue = simplePropertyConverter.getMarshalledVlue(value);
+				} else if (value instanceof BaseEntity){
+					if (complexTypeArray == null) {
+						isBaseEntityType = true;
+						expectedType = value.getClass();
+						complexTypeArray = (Object[]) Array.newInstance(valueClass, collection.size());
+					}
+					marshalledValue = value;
+				} else {
+					LOGGER.error(Constants.ERROR_OBJECT_TYPE);
+					System.err.println(Constants.ERROR_OBJECT_TYPE);
+					isErrorType = true;
+					nullValuePresentInArray = true;
+				}
+			}
+			if (!isErrorType) {
 				try{
-					simpleTypeArray[i++] = value;
+					complexTypeArray[i++] = marshalledValue;
 				} catch(ArrayStoreException e) {
 					String error = Constants.ERROR_TYPE + ".\nExpected type is " +  
-							simpleTypeArray.getClass().getComponentType()
+							expectedType
 							+ " But the object " + value + "[" + i + "] is of different type ";
 					LOGGER.error(error, e);
 					System.err.println(error);
 					nullValuePresentInArray = true;
 				}
-			} else {
-				Class<?> valueClass = value.getClass();
-				
-				if (valueClass.isEnum()){
-					if (enumTypeArray == null) {
-						enumTypeArray = (String[]) Array.newInstance(String.class, collection.size());
-					}
-					try{
-						enumTypeArray[i++] = ReflectionUtil.getEnumKey((Enum<?>)value);
-					} catch(ArrayStoreException e) {
-						String error = Constants.ERROR_TYPE + ".\nExpected type is Enum"
-								+ " But the object " + value + "[" + i + "] is of different type ";
-						LOGGER.error(error, e);
-						System.err.println(error);
-						nullValuePresentInArray = true;
-					}
-				} else if (value instanceof BaseEntity){
-					if (complexTypeArray == null) {
-						complexTypeArray = (Object[]) Array.newInstance(valueClass, collection.size());
-					}
-					try{
-						complexTypeArray[i++] = value;
-					} catch(ArrayStoreException e) {
-						String error = Constants.ERROR_TYPE + ".\nExpected type is " +  
-								complexTypeArray.getClass().getComponentType()
-								+ " But the object " + value + "[" + i + "] is of different type ";
-						LOGGER.error(error, e);
-						System.err.println(error);
-						nullValuePresentInArray = true;
-					}
-				} else {
-					LOGGER.error(Constants.ERROR_OBJECT_TYPE);
-					System.err.println(Constants.ERROR_OBJECT_TYPE);
-				}
 			}
 		}
 		
-		if (simpleTypeArray != null && !nullValuePresentInArray) {
-			PropertyConverterFactory.getConverter(SimpleTypeConverter.class.getName()).
-				marshall(source, destination, fieldName, simpleTypeArray);
-		} else if (complexTypeArray != null && !nullValuePresentInArray) {
-			PropertyConverter converter = PropertyConverterFactory.getConverter(ChildNodeConverter.class.getName());
-			for ( i = 0; i < complexTypeArray.length; i++) {
-				converter.marshall(source, destination, fieldName, complexTypeArray[i]);
+		if (complexTypeArray != null && !nullValuePresentInArray) {
+			if (isSimpleType) {
+				PropertyConverterFactory.getConverter(SimpleTypeConverter.class.getName()).
+					marshall(source, destination, fieldName, complexTypeArray);
+			} else if (isDateType) {
+				PropertyConverterFactory.getConverter(DateConverter.class.getName()).
+				marshall(source, destination, fieldName, complexTypeArray);
+			} else if (isEnumType){
+				PropertyConverterFactory.getConverter(EnumConverter.class.getName()).
+					marshall(source, destination, fieldName, complexTypeArray);
+			} else if (isBaseEntityType){
+				PropertyConverter converter = PropertyConverterFactory.getConverter(ChildNodeConverter.class.getName());
+				for ( i = 0; i < complexTypeArray.length; i++) {
+					converter.marshall(source, destination, fieldName, complexTypeArray[i]);
+				}
+			} else {
+				LOGGER.error(Constants.ERROR_TYPE);
+				System.err.println(Constants.ERROR_TYPE);
 			}
-		} else if (enumTypeArray != null && !nullValuePresentInArray) {
-			PropertyConverterFactory.getConverter(EnumConverter.class.getName()).
-					marshall(source, destination, fieldName, enumTypeArray);
-		} else {
-			LOGGER.error(Constants.ERROR_TYPE);
-			System.err.println(Constants.ERROR_TYPE);
 		}
 		
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T> void unmarshall(Node source, T destination, String propertyName,
+	public <T> Object unmarshall(Node source, T destination, String propertyName,
 			T unmarshalledChild) throws ConverterException {
 		
 		Class<?> collectionType = ReflectionUtil.getType(destination.getClass(), propertyName);
+		Class<?> actualObjectType = ReflectionUtil.getGenericType(destination.getClass(), propertyName);
 		Collection<Object> collection = (Collection<Object>) ReflectionUtil.getProperty(destination, propertyName);
 		if (collection == null && unmarshalledChild != null){
 			if (collectionType.isAssignableFrom(List.class)){
@@ -116,37 +133,28 @@ public class CollectionConverter implements PropertyConverter {
 				collection = new HashSet<Object>();
 			}
 			collection.add(unmarshalledChild);
-			ReflectionUtil.setProperty(destination, propertyName, collection);
 		} else if (unmarshalledChild != null){
 			collection.add(unmarshalledChild);
 		} else {
 			Object propertyValue = source.getProperty(propertyName);
-			collection = Arrays.asList((Object[]) propertyValue);
-			Collection<Object> tempCollection = null;
-			if( collection != null && collection.size() > 0) {
-				for (Iterator<Object> iterator = collection.iterator(); iterator
-						.hasNext();) {
-					Object object = (Object) iterator.next();
-					if (object != null && object instanceof String && ((String)object).startsWith(Constants.ENUM_KEY)) {
-						Enum<?> value = ReflectionUtil.getEnumValue((String) object);
-						if (tempCollection == null){
-							tempCollection = new ArrayList<>(collection.size());
-						}
-						tempCollection.add(value);
-					} else {
-						break;
-					}
+			collection = Arrays.asList((Object[])propertyValue);
+			if (actualObjectType.isEnum() || ReflectionUtil.isDateType(actualObjectType)){
+				Collection<Object> tempCollection = new ArrayList<>(collection.size());
+				CustomPropertyConverter simplePropertyConverter = actualObjectType.isEnum() ? 
+						PropertyConverterFactory.getSimplePropertyConverter(EnumConverter.class.getName()) :
+							PropertyConverterFactory.getSimplePropertyConverter(DateConverter.class.getName()); 
+				for (Iterator<Object> iterator = collection.iterator(); iterator.hasNext();) {
+					tempCollection.add(simplePropertyConverter.getUnMarshalledVlue(actualObjectType,iterator.next()));
 				}
-				if (tempCollection != null) {
+				if (!tempCollection.isEmpty()) {
 					collection = tempCollection;
 				}
 			}
-			
 			if (collectionType.isAssignableFrom(Set.class)) {
 				collection = new HashSet<Object>(collection);
 			}
-			ReflectionUtil.setProperty(destination, propertyName, collection);
-		} 
+		}
+		return collection;
 	}
 
 }

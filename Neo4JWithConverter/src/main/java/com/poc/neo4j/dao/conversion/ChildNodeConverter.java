@@ -27,12 +27,12 @@ public class ChildNodeConverter implements PropertyConverter {
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> void unmarshall(Node source, T destination, String propertyName, T child)
+	public <T> Object unmarshall(Node source, T destination, String propertyName, T child)
 			throws ConverterException {
 		
 		Iterable<Relationship> relations = source.getRelationships(Direction.OUTGOING);
 		if (relations == null) {
-			return;
+			return null;
 		}
 		for (Relationship relationship : relations) {
 			assert relationship != null;
@@ -48,12 +48,13 @@ public class ChildNodeConverter implements PropertyConverter {
 			child = (T) unmarshallChild(childNode, associatedClass);
 			PropertyConverter propertyConverter = 
 					PropertyConverterFactory.getUnMarshallingConverter(destination.getClass(), relationType);
-			propertyConverter.unmarshall(childNode, destination, relationType, child);
-			
+			Object object = propertyConverter.unmarshall(childNode, destination, relationType, child);
+			ReflectionUtil.setProperty(destination, relationType, object);
 //			if (endNode.hasRelationship(Direction.OUTGOING)) {
 //				unmarshall(endNode, child, null, null);
 //			}
 		}
+		return null;
 	}
 	
 	public <T> T unmarshallChild(Node childNode, Class<T> childClass) 
@@ -66,7 +67,8 @@ public class ChildNodeConverter implements PropertyConverter {
 		Iterable<String> keys = childNode.getPropertyKeys();
 		for (String key : keys) {
 			PropertyConverter propertyConverter = PropertyConverterFactory.getUnMarshallingConverter(childClass, key);
-			propertyConverter.unmarshall(childNode, child, key, null);
+			Object object = propertyConverter.unmarshall(childNode, child, key, null);
+			ReflectionUtil.setProperty(child, key, object);
         }
 		ReflectionUtil.setProperty(child, "id", childNode.getId());
 		unmarshall(childNode, child, null, null);

@@ -33,7 +33,8 @@ public interface PropertyConverter {
 	 * @param destination - The object to which the value must be set
 	 * @param propertyName - 
 	 * @param unmarshalledChild - child object which must be set in the destination object
+	 * @return the unmarshalled object
 	 * @throws ConverterException
 	 */
-	<T> void unmarshall(Node source, T destination, String propertyName, T unmarshalledChild) throws ConverterException;
+	<T> Object unmarshall(Node source, T destination, String propertyName, T unmarshalledChild) throws ConverterException;
 }

@@ -3,6 +3,7 @@ package com.poc.neo4j.dao.util;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.Date;
 
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang.ClassUtils;
@@ -38,6 +39,22 @@ public class ReflectionUtil {
 			return true;
 		}
 		return false;	
+	}
+
+	public static boolean isDateType(Object object) {
+		
+		if (object != null && (object instanceof Date || object instanceof java.util.Date)) {
+			return true;
+		}
+		return false;
+	}
+	
+	public static boolean isDateType(Class<?> type) {
+		
+		if (type != null && (type.isAssignableFrom(Date.class) || type.isAssignableFrom(java.util.Date.class))) {
+			return true;
+		}
+		return false;
 	}
 
 	public static Class<?> getType(Class<?> classObject, String fieldName) {
@@ -184,26 +201,19 @@ public class ReflectionUtil {
 		return setterParamType[0];
 	 }
 	 
-	 @SuppressWarnings({ "unchecked", "rawtypes" })
-	public static Enum<?>  getEnumValue(String nodePropertyValue) {
+	 
+	 public static Class<?>  getGenericType(Class<?> type, String collectionFieldName) {
 		 
-		String type = nodePropertyValue.substring(nodePropertyValue.indexOf(SEPARATOR_DOT) + 1, 
-				nodePropertyValue.lastIndexOf(SEPARATOR_DOT));
-		String fieldValue = nodePropertyValue.substring(nodePropertyValue.lastIndexOf(SEPARATOR_DOT) + 1);
-		Enum<?> enumVal = null;
-		try {
-			enumVal = Enum.valueOf((Class<Enum>) Class.forName(type), fieldValue);
-		} catch (ClassNotFoundException e) {
-			ConverterException ce =  new  ConverterException(CLASS_NOT_FOUND,
-					"Error while registering the class" + type, e);
+		 Class<?> genericType = null;
+		 try {
+			 genericType = (Class<?>)((java.lang.reflect.ParameterizedType) 
+					type.getDeclaredField(collectionFieldName).getGenericType()).getActualTypeArguments()[0];
+		} catch (NoSuchFieldException | SecurityException e) {
+			ConverterException ce = new ConverterException(FIELD_NOT_FOUND,"Field:[" + collectionFieldName + 
+					"] not found in Class[" + type.getName() + "]", e);
+			System.err.println(ce);
 			LOGGER.error(ce);
 		}
-		return enumVal;
-	 }
-	 
-	 public static String getEnumKey (Enum<?> enumObject) {
-		 return ENUM_KEY + SEPARATOR_DOT + 
-				 enumObject.getClass().getName() + SEPARATOR_DOT + 
-			((Enum<?>)enumObject).name();
+		 return genericType;
 	 }
 }

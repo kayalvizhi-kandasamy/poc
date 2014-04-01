@@ -2,6 +2,7 @@ package com.poc.neo4j.dao.conversion;
 
 import static com.poc.neo4j.dao.Constants.MAP_KEY;
 
+import java.sql.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,7 @@ public class PropertyConverterFactory {
 		converters.put(ChildNodeConverter.class.getName(), new ChildNodeConverter());
 		converters.put(ArrayConverter.class.getName(), new ArrayConverter());
 		converters.put(EnumConverter.class.getName(), new EnumConverter());
+		converters.put(DateConverter.class.getName(), new DateConverter());
 	}
 	
 	public static PropertyConverter getMarshallingConverter(Object sourceValue) {
@@ -41,6 +43,8 @@ public class PropertyConverterFactory {
     		propertyConverter = converters.get(ArrayConverter.class.getName());
     	} else if (sourceValue instanceof Enum) {
     		propertyConverter = converters.get(EnumConverter.class.getName());
+    	} else if (sourceValue instanceof Date || sourceValue instanceof java.util.Date) {
+    		propertyConverter = converters.get(DateConverter.class.getName());
     	} else {
     		propertyConverter = converters.get(ChildNodeConverter.class.getName());
     	}
@@ -61,6 +65,9 @@ public class PropertyConverterFactory {
 			} else if (setterParamType.isAssignableFrom(List.class) || 
 					setterParamType.isAssignableFrom(Set.class)){
 				propertyConverter = converters.get(CollectionConverter.class.getName());
+			} else if (setterParamType.isAssignableFrom(Date.class) || 
+					setterParamType.isAssignableFrom(java.util.Date.class)){
+				propertyConverter = converters.get(DateConverter.class.getName());
 			} else {
 				propertyConverter =  converters.get(SimpleTypeConverter.class.getName());
 			}
@@ -75,6 +82,20 @@ public class PropertyConverterFactory {
 	 */
 	public static PropertyConverter getConverter(String name) {
 		return converters.get(name);
+	}
+	
+	/**
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public static CustomPropertyConverter getSimplePropertyConverter(String name) {
+		
+		PropertyConverter propertyConverter = converters.get(name);
+		if (propertyConverter instanceof CustomPropertyConverter){
+			return (CustomPropertyConverter) propertyConverter;
+		}
+		return null;
 	}
 
 }

@@ -3,6 +3,7 @@ package com.poc.neo4j.dao;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -15,6 +16,7 @@ import org.junit.Test;
 
 import com.poc.neo4j.model.AccountInfo;
 import com.poc.neo4j.model.AnsibleModuleDefinition;
+import com.poc.neo4j.model.DateHolder;
 import com.poc.neo4j.model.Filter;
 import com.poc.neo4j.model.InstanceProvider;
 import com.poc.neo4j.model.IpPermissionInfo;
@@ -299,6 +301,45 @@ public class TestPersistenceManager {
 		assertSame(InstanceProvider.OPENSTACK, accounts.get(0).getArrayTypes()[1]);
 	}
 	
+	@Test
+	public void testPersistEntity_EntityWithDate(){
+		
+		System.out.println("\nTestPersistenceManager.testPersistEntity_EntityWithDate()");
+		System.out.println("------------------------------------------------------------");
+		
+		DateHolder dateHolder = new DateHolder();
+		dateHolder.setUtilDate(new Date());
+		dateHolder.setSqlDate(new java.sql.Date(System.currentTimeMillis()));
+		
+		List<Date> utilDatesList = new ArrayList<Date> (2);
+		utilDatesList.add(new Date());
+		utilDatesList.add(new Date());
+		
+		Date[] utilDateArray = new Date[]{new Date(), new Date()};
+		
+		List<java.sql.Date> sqlDatesList = new ArrayList<java.sql.Date> (2);
+		sqlDatesList.add(new java.sql.Date(System.currentTimeMillis()));
+		sqlDatesList.add(new java.sql.Date(System.currentTimeMillis()));
+		
+		java.sql.Date[] sqlDatesArray = new java.sql.Date[]{new java.sql.Date(System.currentTimeMillis()), 
+					new java.sql.Date(System.currentTimeMillis())};
+		
+		dateHolder.setSqlDatesList(sqlDatesList);
+		dateHolder.setUtilDatesList(utilDatesList);
+		dateHolder.setSqlDatesArray(sqlDatesArray);
+		dateHolder.setUtilDatesArray(utilDateArray);
+		
+		persistenceManager.persistEntity(dateHolder);
+		
+		List<DateHolder> dateHolders = persistenceManager.getEntities(DateHolder.class);
+		assertNotNull(dateHolders);
+		assertEquals(1, dateHolders.size());
+		assertEquals(dateHolder.getUtilDate(), dateHolders.get(0).getUtilDate());
+		assertEquals(dateHolder.getSqlDate(), dateHolders.get(0).getSqlDate());
+		
+		
+		
+	}
 	
 	@Test
 	public void testGetEntities(){

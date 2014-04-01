@@ -41,7 +41,7 @@ public class MapConverter implements PropertyConverter{
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T> void unmarshall(Node source, T destination, String propertyName, T child)
+	public <T> Object unmarshall(Node source, T destination, String propertyName, T child)
 			throws ConverterException {
 		
 		String fieldName = propertyName.substring(MAP_KEY.length() + 1, 
@@ -50,9 +50,9 @@ public class MapConverter implements PropertyConverter{
 		Map<Object, Object> map = (Map<Object, Object>) ReflectionUtil.getProperty(destination, fieldName);
 		if (map == null) {
 			map = new HashMap<Object, Object>();
-			ReflectionUtil.setProperty(destination, fieldName, map);
 		} 
 		map.put(mapKey, source.getProperty(propertyName));
+		return map;
 	}
 
 }
